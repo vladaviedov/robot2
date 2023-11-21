@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -g
-LDFLAGS=
+LDFLAGS=-lgpiod
 
 OUT=build/robot2
 SUBDIRS=$(shell cd src && find * -type d -printf "%p/\n")
