@@ -26,11 +26,11 @@ motor *setup_motor(uint32_t ctrl1_pin, uint32_t ctrl2_pin, uint32_t pwm_pin);
 /**
  * @brief Set motor speed value.
  *
- * @param[in] motor - Motor object.
+ * @param[in] motor - Motor object.pthread_exit
  * @param[in] value - Motor speed.
  * @param[in] dir - Motor direction.
  */
-void motor_set(motor *motor, uint8_t value, direction dir);
+void motor_set(motor *motor, uint32_t value, direction dir);
 
 /**
  * @brief Stop motor.
@@ -64,7 +64,7 @@ motor_grp *group_motors(motor *first, motor *second);
  * @param[in] value - Motor speed.
  * @param[in] dir - Motor direction.
  */
-void motors_set(motor_grp *motors, uint8_t value, direction dir);
+void motors_set(motor_grp *motors, uint32_t value, direction dir);
 
 /**
  * @brief Stop motor group.
