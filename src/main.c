@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <signal.h>
 
@@ -8,7 +9,7 @@
 #include "driver/pwm.h"
 #include "driver/motors.h"
 
-#define AIN1 2u
+#define AIN1 24u
 #define AIN2 3u
 #define PWMA 1u
 
@@ -26,23 +27,26 @@ void motor_test_routine(void);
 
 int main() {
 	gpio_start();
-	gpio_test_routine();
+	pwm_test_routine();
 	return 0;
 }
 
 void cleanup_gpio() {
 	gpiod_line_release(test_gpio);
 	gpio_end();
+	exit(2);
 }
 
 void cleanup_pwm() {
 	gpiod_line_release(pwm_detach(test_pwm));
 	gpio_end();
+	exit(2);
 }
 
 void cleanup_motor() {
 	delete_motor(test_motor);
 	gpio_end();
+	exit(2);
 }
 
 void gpio_test_routine(void) {
@@ -56,7 +60,7 @@ void gpio_test_routine(void) {
 		int32_t input;
 
 		printf("Input value: ");
-		scanf("%d\n", &input);
+		scanf("%d", &input);
 
 		if (input == 0) {
 			gpiod_line_set_value(test_gpio, 0);
@@ -71,7 +75,7 @@ void pwm_test_routine(void) {
 	signal(SIGINT, &cleanup_pwm);
 	signal(SIGQUIT, &cleanup_pwm);
 
-	struct gpiod_line *gpio_line = gpiod_chip_get_line(gpio_chip, PWMA);
+	struct gpiod_line *gpio_line = gpiod_chip_get_line(gpio_chip, AIN1);
 	gpiod_line_request_output(gpio_line, "TEST", 0);
 	test_pwm = pwm_attach(gpio_line);
 
@@ -79,7 +83,7 @@ void pwm_test_routine(void) {
 		int32_t input;
 
 		printf("Duty cycle: ");
-		scanf("%d\n", &input);
+		scanf("%d", &input);
 
 		pwm_set(test_pwm, input);
 	}
@@ -95,7 +99,7 @@ void motor_test_routine(void) {
 		int32_t input;
 
 		printf("Input speed: ");
-		scanf("%d\n", &input);
+		scanf("%d", &input);
 
 		if (input > 0) {
 			motor_set(test_motor, (uint8_t)input, FORWARD);
