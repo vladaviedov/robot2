@@ -3,6 +3,6 @@
 #include "tests.h"
 
 int main() {
-	pwm_test_routine();
+	motor_test_routine();
 	return 0;
 }

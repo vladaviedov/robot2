@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include <signal.h>
 #include <gpiod.h>
 
@@ -65,11 +66,11 @@ void pwm_test_routine(void) {
 	gpiod_line_request_output(gpio_line, "TEST", 0);
 	test_pwm1 = pwm_attach(gpio_line);
 
-	gpio_line = gpiod_chip_get_line(gpio_chip, AIN1);
+	gpio_line = gpiod_chip_get_line(gpio_chip, AIN2);
 	gpiod_line_request_output(gpio_line, "TEST", 0);
 	test_pwm2 = pwm_attach(gpio_line);
 
-	gpio_line = gpiod_chip_get_line(gpio_chip, AIN1);
+	gpio_line = gpiod_chip_get_line(gpio_chip, PWMA);
 	gpiod_line_request_output(gpio_line, "TEST", 0);
 	test_pwm3 = pwm_attach(gpio_line);
 
@@ -99,9 +100,9 @@ void motor_test_routine(void) {
 		scanf("%d", &input);
 
 		if (input > 0) {
-			motor_set(test_motor, (uint8_t)input, FORWARD);
+			motor_set(test_motor, abs(input), FORWARD);
 		} else if (input < 0) {
-			motor_set(test_motor, (uint8_t)input, BACKWARD);
+			motor_set(test_motor, abs(input), BACKWARD);
 		} else {
 			motor_stop(test_motor);
 		}
