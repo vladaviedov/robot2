@@ -3,6 +3,6 @@
 #include "tests.h"
 
 int main() {
-	motor_test_routine();
+	two_motor_test_routine();
 	return 0;
 }
