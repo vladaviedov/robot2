@@ -51,10 +51,14 @@ void *pwm_executor(void *arg) {
 	pwm_handle *handle = (pwm_handle *)arg;
 
 	while (handle->active) {
-		gpiod_line_set_value(handle->line, 1);
-		usleep(TIME_PER_PERCENT * handle->duty_percent);
-		gpiod_line_set_value(handle->line, 0);
-		usleep(TIME_PER_PERCENT * (100 - handle->duty_percent));
+		if (handle->duty_percent != 0) {
+			gpiod_line_set_value(handle->line, 1);
+			usleep(TIME_PER_PERCENT * handle->duty_percent);
+		}
+		if (handle->duty_percent != 100) {
+			gpiod_line_set_value(handle->line, 0);
+			usleep(TIME_PER_PERCENT * (100 - handle->duty_percent));
+		}
 	}
 
 	return NULL;
