@@ -10,6 +10,7 @@ public:
 	~light_sens();
 
 	int read() const;
+
 private:
 	const gpiod::line input;
 
