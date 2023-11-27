@@ -1,12 +1,12 @@
-CC=gcc
+CC=g++
 CFLAGS=-Wall -Wextra -g
-LDFLAGS=-lgpiod
+LDFLAGS=-lgpiodcxx
 
 OUT=build/robot2
 SUBDIRS=$(shell cd src && find * -type d -printf "%p/\n")
 MKSUBDIRS=$(addprefix build/, $(SUBDIRS))
-SRCS=$(shell cd src && find * -type f -name '*.c')
-OBJS=$(addprefix build/, $(SRCS:.c=.o))
+SRCS=$(shell cd src && find * -type f -name '*.cpp')
+OBJS=$(addprefix build/, $(SRCS:.cpp=.o))
 
 .PHONY:
 all: build $(MKSUBDIRS) $(OUT)
@@ -25,7 +25,7 @@ endef
 
 # Build template
 define compile_subdir
-build/$(1)%.o: src/$(1)%.c
+build/$(1)%.o: src/$(1)%.cpp
 	$(CC) $(CFLAGS) -c $$< -o $$@
 endef
 
