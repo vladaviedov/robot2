@@ -1,6 +1,7 @@
 #include "pwm.hpp"
 
 #include <chrono>
+#include <memory>
 #include <thread>
 
 // 500 Hz PWM -> 2000us / period
@@ -32,6 +33,7 @@ pwm_worker::pwm_worker(gpiod::chip &chip, uint32_t pin) :
 			}
 		}
 	};
+	pwm_thread = std::make_unique<std::thread>(executor);
 }
 
 pwm_worker::~pwm_worker() {
