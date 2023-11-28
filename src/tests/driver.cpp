@@ -1,4 +1,4 @@
-#include "tests.hpp"
+#include "driver.hpp"
 
 #include <chrono>
 #include <iostream>
@@ -7,10 +7,10 @@
 #include <signal.h>
 #include <thread>
 
-#include "driver/pinmap.hpp"
-#include "driver/pwm.hpp"
-#include "driver/motors.hpp"
-#include "driver/hcsr04.hpp"
+#include "../driver/pinmap.hpp"
+#include "../driver/pwm.hpp"
+#include "../driver/motors.hpp"
+#include "../driver/hcsr04.hpp"
 
 #define GPIO_USER "robot2_test"
 

@@ -1,4 +1,4 @@
-#include "tests.hpp"
+#include "tests/driver.hpp"
 
 int main() {
 	test::distance();
