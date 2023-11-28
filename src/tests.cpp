@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <gpiod.hpp>
+#include <signal.h>
 
 #include "driver/pinmap.hpp"
 #include "driver/pwm.hpp"
@@ -10,8 +11,16 @@
 #define GPIO_USER "robot2_test"
 
 gpiod::chip chip("gpiochip0");
+bool running = true;
+
+void stop_test(int code) {
+	running = false;
+}
 
 void test::gpio_out() {
+	signal(SIGINT, stop_test);
+	signal(SIGQUIT, stop_test);
+
 	gpiod::line test_line = chip.get_line(RASPI_37);
 	test_line.request({
 		.consumer = GPIO_USER,
@@ -19,7 +28,7 @@ void test::gpio_out() {
 		.flags = 0
 	}, 0);
 
-	while (true) {
+	while (running) {
 		int input;
 		std::cout << "Input value: ";
 		std::cin >> input;
@@ -38,9 +47,12 @@ void test::gpio_in() {
 }
 
 void test::pwm() {
+	signal(SIGINT, stop_test);
+	signal(SIGQUIT, stop_test);
+
 	pwm_worker test_pwm(chip, RASPI_37);	
 
-	while (true) {
+	while (running) {
 		int input;
 		std::cout << "Input duty: ";
 		std::cin >> input;
@@ -52,9 +64,12 @@ void test::pwm() {
 }
 
 void test::one_motor() {
+	signal(SIGINT, stop_test);
+	signal(SIGQUIT, stop_test);
+
 	motor motor(chip, RASPI_11, RASPI_7, RASPI_5);
 
-	while (true) {
+	while (running) {
 		int input;
 		std::cout << "Input speed: ";
 		std::cin >> input;
