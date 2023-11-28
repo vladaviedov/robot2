@@ -165,11 +165,25 @@ void test::four_motor() {
 	}
 }
 
+void test::event() {
+	gpiod::line test_line = chip.get_line(RASPI_37);
+	test_line.request({
+		.consumer = GPIO_USER,
+		.request_type = gpiod::line_request::EVENT_FALLING_EDGE,
+		.flags = 0
+	});
+
+	while (true) {
+		int res = test_line.event_wait(std::chrono::milliseconds(100));
+		std::cout << "DONENE " << res << std::endl;
+	}
+}
+
 void test::distance() {
 	hc_sr04 sensor(chip, RASPI_37, RASPI_38);
 
 	while (true) {
-		uint64_t value = sensor.pulse(10000);
+		uint64_t value = sensor.pulse(100000);
 		std::cout << value << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}

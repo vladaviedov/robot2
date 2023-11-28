@@ -9,13 +9,6 @@
 
 #define GPIO_USER "robot2_sensor"
 
-typedef struct {
-	hc_sr04 *sensor;
-	uint64_t timeout;
-	void (*cb)(uint64_t);
-	pthread_t thread;
-} async_op;
-
 hc_sr04::hc_sr04(gpiod::chip &chip, uint32_t trig_pin, uint32_t echo_pin) :
 	trig(chip.get_line(trig_pin)),
 	echo(chip.get_line(echo_pin)) {
@@ -29,7 +22,7 @@ hc_sr04::hc_sr04(gpiod::chip &chip, uint32_t trig_pin, uint32_t echo_pin) :
 	// Set echo pin to rising edge input
 	echo.request({
 		.consumer = GPIO_USER,
-		.request_type = gpiod::line_request::EVENT_RISING_EDGE,
+		.request_type = gpiod::line_request::DIRECTION_INPUT,
 		.flags = 0
 	});
 }
@@ -39,6 +32,7 @@ hc_sr04::~hc_sr04() {
 	echo.release();
 }
 
+#include <iostream>
 uint64_t hc_sr04::pulse(uint64_t timeout_ns) {
 	std::lock_guard<std::mutex> guard(busy);
 
@@ -47,11 +41,18 @@ uint64_t hc_sr04::pulse(uint64_t timeout_ns) {
 	std::this_thread::sleep_for(std::chrono::microseconds(10));
 	trig.set_value(0);
 
+	// Wait for pulse
+	while (!echo.get_value()) {
+		std::this_thread::sleep_for(std::chrono::microseconds(10));
+	}
+
 	// Get initial time
 	auto initial = std::chrono::steady_clock::now();
 
 	// Wait for pulse
-	echo.event_wait(std::chrono::nanoseconds(timeout_ns));
+	while (echo.get_value()) {
+		std::this_thread::sleep_for(std::chrono::microseconds(10));
+	}
 
 	// Get final time
 	auto final = std::chrono::steady_clock::now();

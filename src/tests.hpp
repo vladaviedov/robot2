@@ -7,5 +7,6 @@ namespace test {
 	void one_motor();
 	void two_motor();
 	void four_motor();
+	void event();
 	void distance();
 }
