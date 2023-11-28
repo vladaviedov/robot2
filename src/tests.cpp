@@ -1,13 +1,16 @@
 #include "tests.hpp"
 
+#include <chrono>
 #include <iostream>
 #include <cmath>
 #include <gpiod.hpp>
 #include <signal.h>
+#include <thread>
 
 #include "driver/pinmap.hpp"
 #include "driver/pwm.hpp"
 #include "driver/motors.hpp"
+#include "driver/hcsr04.hpp"
 
 #define GPIO_USER "robot2_test"
 
@@ -163,5 +166,11 @@ void test::four_motor() {
 }
 
 void test::distance() {
+	hc_sr04 sensor(chip, RASPI_37, RASPI_38);
 
+	while (true) {
+		uint64_t value = sensor.pulse(10000);
+		std::cout << value << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
 }

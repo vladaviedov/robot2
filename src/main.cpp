@@ -1,6 +1,6 @@
 #include "tests.hpp"
 
 int main() {
-	test::gpio_in();
+	test::distance();
 	return 0;
 }
