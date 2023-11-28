@@ -101,7 +101,54 @@ void test::two_motor() {
 }
 
 void test::four_motor() {
+	motor motor1(chip, RASPI_11, RASPI_12, RASPI_10);
+	motor motor2(chip, RASPI_13, RASPI_15, RASPI_19);
+	motor motor3(chip, RASPI_29, RASPI_23, RASPI_21);
+	motor motor4(chip, RASPI_31, RASPI_33, RASPI_35);
 
+	while (true) {
+		int input1, input2, input3, input4;
+		std::cout << "Input speed 1: ";
+		std::cin >> input1;
+		std::cout << "Input speed 2: ";
+		std::cin >> input2;
+		std::cout << "Input speed 3: ";
+		std::cin >> input3;
+		std::cout << "Input speed 4: ";
+		std::cin >> input4;
+
+		if (input1 > 0 && input1 <= 100) {
+			motor1.set(abs(input1), direction::FORWARD);
+		} else if (input1 < 0 && input1 >= -100) {
+			motor1.set(abs(input1), direction::BACKWARD);
+		} else {
+			motor1.stop();
+		}
+
+		if (input2 > 0 && input2 <= 100) {
+			motor2.set(abs(input2), direction::FORWARD);
+		} else if (input2 < 0 && input2 >= -100) {
+			motor2.set(abs(input2), direction::BACKWARD);
+		} else {
+			motor2.stop();
+		}
+
+		if (input3 > 0 && input3 <= 100) {
+			motor3.set(abs(input3), direction::FORWARD);
+		} else if (input3 < 0 && input3 >= -100) {
+			motor3.set(abs(input3), direction::BACKWARD);
+		} else {
+			motor3.stop();
+		}
+
+		if (input4 > 0 && input4 <= 100) {
+			motor4.set(abs(input4), direction::FORWARD);
+		} else if (input4 < 0 && input4 >= -100) {
+			motor4.set(abs(input4), direction::BACKWARD);
+		} else {
+			motor4.stop();
+		}
+	}
 }
 
 void test::distance() {
