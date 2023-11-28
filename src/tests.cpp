@@ -1,6 +1,7 @@
 #include "tests.hpp"
 
 #include <iostream>
+#include <cmath>
 #include <gpiod.hpp>
 #include <signal.h>
 
@@ -11,16 +12,8 @@
 #define GPIO_USER "robot2_test"
 
 gpiod::chip chip("gpiochip0");
-bool running = true;
-
-void stop_test(int code) {
-	running = false;
-}
 
 void test::gpio_out() {
-	signal(SIGINT, stop_test);
-	signal(SIGQUIT, stop_test);
-
 	gpiod::line test_line = chip.get_line(RASPI_37);
 	test_line.request({
 		.consumer = GPIO_USER,
@@ -28,7 +21,7 @@ void test::gpio_out() {
 		.flags = 0
 	}, 0);
 
-	while (running) {
+	while (true) {
 		int input;
 		std::cout << "Input value: ";
 		std::cin >> input;
@@ -47,12 +40,9 @@ void test::gpio_in() {
 }
 
 void test::pwm() {
-	signal(SIGINT, stop_test);
-	signal(SIGQUIT, stop_test);
-
 	pwm_worker test_pwm(chip, RASPI_37);	
 
-	while (running) {
+	while (true) {
 		int input;
 		std::cout << "Input duty: ";
 		std::cin >> input;
@@ -64,20 +54,17 @@ void test::pwm() {
 }
 
 void test::one_motor() {
-	signal(SIGINT, stop_test);
-	signal(SIGQUIT, stop_test);
+	motor motor(chip, RASPI_11, RASPI_12, RASPI_10);
 
-	motor motor(chip, RASPI_11, RASPI_7, RASPI_5);
-
-	while (running) {
+	while (true) {
 		int input;
 		std::cout << "Input speed: ";
 		std::cin >> input;
 
-		if (input > 0 || input <= 100) {
-			motor.set(input, direction::FORWARD);
-		} else if (input < 0 || input >= -100) {
-			motor.set(input, direction::BACKWARD);
+		if (input > 0 && input <= 100) {
+			motor.set(abs(input), direction::FORWARD);
+		} else if (input < 0 && input >= -100) {
+			motor.set(abs(input), direction::BACKWARD);
 		} else {
 			motor.stop();
 		}
@@ -85,7 +72,32 @@ void test::one_motor() {
 }
 
 void test::two_motor() {
+	motor motor1(chip, RASPI_11, RASPI_12, RASPI_10);
+	motor motor2(chip, RASPI_13, RASPI_15, RASPI_19);
 
+	while (true) {
+		int input1, input2;
+		std::cout << "Input speed 1: ";
+		std::cin >> input1;
+		std::cout << "Input speed 2: ";
+		std::cin >> input2;
+
+		if (input1 > 0 && input1 <= 100) {
+			motor1.set(abs(input1), direction::FORWARD);
+		} else if (input1 < 0 && input1 >= -100) {
+			motor1.set(abs(input1), direction::BACKWARD);
+		} else {
+			motor1.stop();
+		}
+
+		if (input2 > 0 && input2 <= 100) {
+			motor2.set(abs(input2), direction::FORWARD);
+		} else if (input2 < 0 && input2 >= -100) {
+			motor2.set(abs(input2), direction::BACKWARD);
+		} else {
+			motor2.stop();
+		}
+	}
 }
 
 void test::four_motor() {

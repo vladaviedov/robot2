@@ -2,7 +2,7 @@
 
 // Source: https://i.stack.imgur.com/p2nBh.png
 // Physical Pin Number -> libgpiod Line Number
-#define RAPSI_3 2u
+#define RASPI_3 2u
 #define RASPI_5 3u
 #define RASPI_7 4u
 #define RASPI_8 14u
@@ -23,7 +23,7 @@
 #define RASPI_31 6u
 #define RASPI_32 12u
 #define RASPI_33 13u
-#define RAPSI_35 19u
+#define RASPI_35 19u
 #define RASPI_36 16u
 #define RASPI_37 26u
 #define RASPI_38 20u
