@@ -36,7 +36,18 @@ void test::gpio_out() {
 }
 
 void test::gpio_in() {
+	gpiod::line test_line = chip.get_line(RASPI_37);
+	test_line.request({
+		.consumer = GPIO_USER,
+		.request_type = gpiod::line_request::DIRECTION_INPUT,
+		.flags = 0
+	});
 
+	while (true) {
+		int value = test_line.get_value();
+		std::cout << value << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
 }
 
 void test::pwm() {
