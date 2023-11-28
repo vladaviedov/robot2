@@ -5,6 +5,7 @@
 
 #include "driver/pinmap.hpp"
 #include "driver/pwm.hpp"
+#include "driver/motors.hpp"
 
 #define GPIO_USER "robot2_test"
 
@@ -50,8 +51,22 @@ void test::pwm() {
 	}
 }
 
-void test::motor() {
+void test::one_motor() {
+	motor motor(chip, RASPI_11, RASPI_7, RASPI_5);
 
+	while (true) {
+		int input;
+		std::cout << "Input speed: ";
+		std::cin >> input;
+
+		if (input > 0 || input <= 100) {
+			motor.set(input, direction::FORWARD);
+		} else if (input < 0 || input >= -100) {
+			motor.set(input, direction::BACKWARD);
+		} else {
+			motor.stop();
+		}
+	}
 }
 
 void test::two_motor() {

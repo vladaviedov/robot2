@@ -1,6 +1,6 @@
 #include "tests.hpp"
 
 int main() {
-	test::gpio_out();
+	test::one_motor();
 	return 0;
 }

@@ -4,7 +4,7 @@
 // Physical Pin Number -> libgpiod Line Number
 #define RAPSI_3 2u
 #define RASPI_5 3u
-#define RAPSI_7 4u
+#define RASPI_7 4u
 #define RASPI_8 14u
 #define RASPI_10 15u
 #define RASPI_11 17u
