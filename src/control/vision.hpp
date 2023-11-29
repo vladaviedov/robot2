@@ -2,20 +2,26 @@
 
 #include <opencv4/opencv2/videoio.hpp>
 
+enum guess_dir {
+	LEFT,
+	RIGHT,
+	STRAIGHT
+};
+
 class vision {
 
 public:
 	vision();
 	~vision();
 
-	void capture();
-	void to_screen() const;
+	void process();
+	guess_dir make_guess() const;
 
 private:
 	cv::Mat gen_mask(cv::Mat &frame, cv::Scalar &lower, cv::Scalar &upper) const;
 
 	cv::VideoCapture camera;
-	cv::Mat stored_white;
-	cv::Mat stored_else;
+	uint64_t best_area;
+	cv::Rect best_rect;
 
 };
