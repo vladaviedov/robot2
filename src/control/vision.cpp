@@ -5,7 +5,7 @@
 
 #include "filter.hpp"
 
-#define WHITE_SENS 100
+#define WHITE_SENS 170
 #define BLACK_SENS 130
 #define CAMERA_WIDTH 600
 #define CAMERA_HEIGHT 400

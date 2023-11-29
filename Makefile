@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-Wall -Wextra -g -I /usr/include/opencv4
-LDFLAGS=-lgpiodcxx -lopencv_core -lopencv_videoio -lopencv_imgproc -lopencv_highgui
+LDFLAGS=-lgpiodcxx -lopencv_core -lopencv_videoio -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs
 
 OUT=build/robot2
 SUBDIRS=$(shell cd src && find * -type d -printf "%p/\n")

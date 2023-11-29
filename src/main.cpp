@@ -3,6 +3,6 @@
 #include "tests/stats.hpp"
 
 int main() {
-	test::var_sweep();
+	test::save_image();
 	return 0;
 }

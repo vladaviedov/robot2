@@ -1,10 +1,10 @@
 #include "stats.hpp"
-#include "opencv2/imgproc.hpp"
 
 #include <string>
 #include <vector>
 #include <fstream>
 #include <optional>
+#include <cstdio>
 #include <opencv2/opencv.hpp>
 
 #define CAM_WIDTH 1920
@@ -22,16 +22,12 @@ std::optional<uint32_t> vision_algo_target(const cv::Mat &final, uint32_t area_m
 
 void sweep(const cv::Mat &frame, std::ofstream &outfile);
 
-void test::var_sweep() {
-	// Open camera
-	cv::VideoCapture camera(0);
-
+void test::var_sweep(std::string &filename) {
 	// Open outfile
 	auto file = std::ofstream(OUTFILE);
+	auto frame = cv::imread(filename);
 
 	// Get camera frame
-	cv::Mat frame;
-	camera.read(frame);
 	cv::imshow("Frame", frame);
 	cv::waitKey(0);
 
@@ -40,9 +36,26 @@ void test::var_sweep() {
 	cv::cvtColor(frame, hls_frame, cv::COLOR_BGR2HLS);
 
 	sweep(hls_frame, file);
+}
 
-	// Release camera
-	camera.release();
+void test::save_image() {
+	cv::VideoCapture camera(0);
+	cv::Mat frame;
+	
+	uint32_t i = 0;
+	while (true) {
+		camera.read(frame);
+		cv::imshow("Frame", frame);
+
+		if (cv::waitKey(50) == 's') {
+			std::string name = "image" + std::to_string(i) + ".png";
+
+			cv::imwrite(name, frame);
+			i++;
+		}
+	}
+
+
 }
 
 cv::Mat vision_algo_not_mask(const cv::Mat &frame, uint32_t white_sens, uint32_t black_sens) {
