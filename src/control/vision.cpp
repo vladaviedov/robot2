@@ -5,10 +5,10 @@
 
 #include "filter.hpp"
 
-#define WHITE_SENS 170
-#define BLACK_SENS 130
-#define CAMERA_WIDTH 600
-#define CAMERA_HEIGHT 400
+#define WHITE_SENS 80
+#define BLACK_SENS 170
+#define CAMERA_WIDTH 1280
+#define CAMERA_HEIGHT 720
 
 static cv::Scalar white_lower(0, 255 - WHITE_SENS, 0);
 static cv::Scalar white_upper(255, 255, WHITE_SENS);
@@ -60,12 +60,12 @@ void vision::process() {
 		auto rect = cv::boundingRect(c);
 
 		// Filter small things
-		if (rect.height < 100 || rect.width < 100) {
+		if (rect.height < 10 || rect.width < 10) {
 			continue;
 		}
 
 		// Filter huge things
-		if (area > (CAMERA_WIDTH * CAMERA_HEIGHT) / 2.0) {
+		if (area > 20000) {
 			continue;
 		}
 

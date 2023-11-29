@@ -4,8 +4,8 @@
 #include <opencv2/opencv.hpp>
 
 // TODO: adjust settings
-#define KERNEL_SIZE 10
-#define ITER 5
+#define KERNEL_SIZE 3
+#define ITER 3
 
 cv::Mat filter::morph(cv::Mat &input) {
 	auto kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(KERNEL_SIZE, KERNEL_SIZE));
