@@ -12,7 +12,6 @@
 #define OUTFILE "data.csv"
 
 struct best_rect {
-	cv::Rect rect;
 	uint32_t area;
 	uint32_t delta_x;
 };
@@ -25,7 +24,7 @@ void sweep(const cv::Mat &frame, std::ofstream &outfile);
 
 void test::var_sweep() {
 	// Open camera
-	cv::VideoCapture camera;
+	cv::VideoCapture camera(0);
 
 	// Open outfile
 	auto file = std::ofstream(OUTFILE);
@@ -33,18 +32,20 @@ void test::var_sweep() {
 	// Get camera frame
 	cv::Mat frame;
 	camera.read(frame);
+	cv::imshow("Frame", frame);
+	cv::waitKey(0);
 
-	sweep(frame, file);
+	// Convert to HSL
+	cv::Mat hls_frame;
+	cv::cvtColor(frame, hls_frame, cv::COLOR_BGR2HLS);
+
+	sweep(hls_frame, file);
 
 	// Release camera
 	camera.release();
 }
 
 cv::Mat vision_algo_not_mask(const cv::Mat &frame, uint32_t white_sens, uint32_t black_sens) {
-	// Convert to HSL
-	cv::Mat hls_frame;
-	cv::cvtColor(frame, hls_frame, cv::COLOR_BGR2HLS);
-
 	// Generate bounds
 	cv::Scalar white_lower(0, 255 - white_sens, 0);
 	cv::Scalar white_upper(255, 255, white_sens);
@@ -126,24 +127,26 @@ std::optional<uint32_t> vision_algo_target(const cv::Mat &final, uint32_t area_m
 }
 
 void sweep(const cv::Mat &frame, std::ofstream &outfile) {
-	for (uint32_t white = 0; white < 255; white++) {
-		for (uint32_t black = 0; black < 255; black++) {
-			const cv::Mat else_mask = vision_algo_not_mask(frame, white, black);
+	for (uint32_t white = 5; white < 25; white++) {
+		for (uint32_t black = 5; black < 25; black++) {
+			const cv::Mat else_mask = vision_algo_not_mask(frame, white * 10, black * 10);
+			std::cout << "Mask #" << (white - 5) * 25 + black - 4 << "/400" << std::endl;
 
-			for (uint32_t kernel = 1; kernel < 20; kernel++) {
-				for (uint32_t iter = 1; iter < 20; iter++) {
-					const cv::Mat filtered = vision_algo_filter(else_mask, kernel, iter);
+			for (uint32_t kernel = 1; kernel < 7; kernel++) {
+				for (uint32_t iter = 1; iter < 7; iter++) {
+					const cv::Mat filtered = vision_algo_filter(else_mask, kernel * 3, iter * 3);
+					std::cout << "Filter #" << (kernel - 1) * 6 + iter << "/36" << std::endl;
 
-					for (uint32_t max_area = 1; max_area < 2000; max_area++) {
-						for (uint32_t min_size = 0; min_size < CAM_WIDTH; min_size++) {
-							auto result = vision_algo_target(filtered, max_area * 100, min_size);
+					for (uint32_t max_area = 1; max_area < 10; max_area++) {
+						for (uint32_t min_size = 0; min_size < CAM_WIDTH / 10 / 2; min_size++) {
+							auto result = vision_algo_target(filtered, max_area * 20000, min_size * 10);
 
-							outfile << white << ","
-								<< black << ","
-								<< kernel << ","
-								<< iter << ","
-								<< max_area << ","
-								<< min_size << ",";
+							outfile << white * 10 << ","
+								<< black * 10 << ","
+								<< kernel * 3 << ","
+								<< iter * 3 << ","
+								<< max_area * 20000 << ","
+								<< min_size * 10 << ",";
 
 							result.has_value()
 								? outfile << result.value()
