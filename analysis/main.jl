@@ -80,4 +80,6 @@ grouped = groupby(combined, [:white, :black, :kernel, :iter, :max_area, :min_siz
 filtered = filter(:white => w -> length(w) == 19, grouped)
 recombined = combine(filtered, :error_rating => mean)
 sort!(recombined, :error_rating_mean)
-display(first(recombined, 200))
+smallest100 = first(recombined, 100)
+
+# For here do whatver
