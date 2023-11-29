@@ -14,10 +14,14 @@
 
 #define GPIO_USER "robot2_test"
 
-gpiod::chip chip("gpiochip0");
+std::unique_ptr<gpiod::chip> chip;
+
+void test::driver_prepare() {
+	chip = std::make_unique<gpiod::chip>("gpiochip0");
+}
 
 void test::gpio_out() {
-	gpiod::line test_line = chip.get_line(RASPI_37);
+	gpiod::line test_line = chip->get_line(RASPI_37);
 	test_line.request({
 		.consumer = GPIO_USER,
 		.request_type = gpiod::line_request::DIRECTION_OUTPUT,
@@ -39,7 +43,7 @@ void test::gpio_out() {
 }
 
 void test::gpio_in() {
-	gpiod::line test_line = chip.get_line(RASPI_37);
+	gpiod::line test_line = chip->get_line(RASPI_37);
 	test_line.request({
 		.consumer = GPIO_USER,
 		.request_type = gpiod::line_request::DIRECTION_INPUT,
@@ -54,7 +58,7 @@ void test::gpio_in() {
 }
 
 void test::pwm() {
-	pwm_worker test_pwm(chip, RASPI_37);	
+	pwm_worker test_pwm(*chip, RASPI_37);	
 
 	while (true) {
 		int input;
@@ -68,7 +72,7 @@ void test::pwm() {
 }
 
 void test::one_motor() {
-	motor motor(chip, RASPI_11, RASPI_12, RASPI_10);
+	motor motor(*chip, RASPI_11, RASPI_12, RASPI_10);
 
 	while (true) {
 		int input;
@@ -86,8 +90,8 @@ void test::one_motor() {
 }
 
 void test::two_motor() {
-	motor motor1(chip, RASPI_11, RASPI_12, RASPI_10);
-	motor motor2(chip, RASPI_13, RASPI_15, RASPI_19);
+	motor motor1(*chip, RASPI_11, RASPI_12, RASPI_10);
+	motor motor2(*chip, RASPI_13, RASPI_15, RASPI_19);
 
 	while (true) {
 		int input1, input2;
@@ -115,10 +119,10 @@ void test::two_motor() {
 }
 
 void test::four_motor() {
-	motor motor1(chip, RASPI_11, RASPI_12, RASPI_10);
-	motor motor2(chip, RASPI_13, RASPI_15, RASPI_19);
-	motor motor3(chip, RASPI_29, RASPI_23, RASPI_21);
-	motor motor4(chip, RASPI_31, RASPI_33, RASPI_35);
+	motor motor1(*chip, RASPI_11, RASPI_12, RASPI_10);
+	motor motor2(*chip, RASPI_13, RASPI_15, RASPI_19);
+	motor motor3(*chip, RASPI_29, RASPI_23, RASPI_21);
+	motor motor4(*chip, RASPI_31, RASPI_33, RASPI_35);
 
 	while (true) {
 		int input1, input2, input3, input4;
@@ -166,7 +170,7 @@ void test::four_motor() {
 }
 
 void test::event() {
-	gpiod::line test_line = chip.get_line(RASPI_37);
+	gpiod::line test_line = chip->get_line(RASPI_37);
 	test_line.request({
 		.consumer = GPIO_USER,
 		.request_type = gpiod::line_request::EVENT_FALLING_EDGE,
@@ -180,7 +184,7 @@ void test::event() {
 }
 
 void test::distance() {
-	hc_sr04 sensor(chip, RASPI_37, RASPI_38);
+	hc_sr04 sensor(*chip, RASPI_37, RASPI_38);
 
 	while (true) {
 		uint64_t value = sensor.pulse(100000);

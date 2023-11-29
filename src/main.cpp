@@ -1,6 +1,7 @@
+#include "tests/camera.hpp"
 #include "tests/driver.hpp"
 
 int main() {
-	test::distance();
+	test::show_masks();
 	return 0;
 }

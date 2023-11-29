@@ -1,6 +1,7 @@
 #pragma once
 
 namespace test {
+	void driver_prepare();
 	void gpio_out();
 	void gpio_in();
 	void pwm();
