@@ -5,31 +5,30 @@
 #include <fstream>
 #include <optional>
 #include <cstdio>
+#include <cmath>
 #include <opencv2/opencv.hpp>
 
-#define CAM_WIDTH 1920
-#define CAM_HEIGHT 1080
-#define OUTFILE "data.csv"
+#define CAM_WIDTH 1280
+#define CAM_HEIGHT 720
 
 struct best_rect {
 	uint32_t area;
-	uint32_t delta_x;
+	int32_t delta_x;
+	int32_t delta_y;
 };
 
 cv::Mat vision_algo_not_mask(cv::Mat &frame, uint32_t white_sens, uint32_t black_sens);
-cv::Mat vision_algo_filter(cv::Mat &input, uint32_t kernel_size, uint32_t iterations);
-std::optional<uint32_t> vision_algo_target(const cv::Mat &final, uint32_t area_max, uint32_t size_min);
+std::vector<std::vector<cv::Point>> vision_algo_filter(cv::Mat &input, uint32_t kernel_size, uint32_t iterations);
+std::optional<std::pair<int32_t, int32_t>> vision_algo_target(const std::vector<std::vector<cv::Point>> &contours, uint32_t area_max, uint32_t size_min);
 
 void sweep(const cv::Mat &frame, std::ofstream &outfile);
 
-void test::var_sweep(std::string &filename) {
-	// Open outfile
-	auto file = std::ofstream(OUTFILE);
+void test::var_sweep(std::string &filename, std::string &outfile) {
+	// Get frame
 	auto frame = cv::imread(filename);
 
-	// Get camera frame
-	cv::imshow("Frame", frame);
-	cv::waitKey(0);
+	// Open outfile
+	auto file = std::ofstream(outfile);
 
 	// Convert to HSL
 	cv::Mat hls_frame;
@@ -55,7 +54,7 @@ void test::save_image() {
 		}
 	}
 
-
+	camera.release();
 }
 
 cv::Mat vision_algo_not_mask(const cv::Mat &frame, uint32_t white_sens, uint32_t black_sens) {
@@ -84,7 +83,7 @@ cv::Mat vision_algo_not_mask(const cv::Mat &frame, uint32_t white_sens, uint32_t
 	return else_mask;
 }
 
-cv::Mat vision_algo_filter(const cv::Mat &input, uint32_t kernel_size, uint32_t iterations) {
+std::vector<std::vector<cv::Point>> vision_algo_filter(const cv::Mat &input, uint32_t kernel_size, uint32_t iterations) {
 	// Make kernel
 	auto kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kernel_size, kernel_size));
 
@@ -96,18 +95,19 @@ cv::Mat vision_algo_filter(const cv::Mat &input, uint32_t kernel_size, uint32_t 
 	cv::Mat dilated;
 	cv::morphologyEx(eroded, dilated, cv::MORPH_DILATE, kernel, cv::Point(-1, -1), iterations);
 
-	return dilated;
-}
-
-std::optional<uint32_t> vision_algo_target(const cv::Mat &final, uint32_t area_max, uint32_t size_min) {
 	// Get contours
 	std::vector<std::vector<cv::Point>> contours;
 	std::vector<cv::Vec4i> hierarchy;
-	cv::findContours(final, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+	cv::findContours(eroded, contours, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
 
+	return contours;
+}
+
+std::optional<std::pair<int32_t, int32_t>> vision_algo_target(const std::vector<std::vector<cv::Point>> &contours, uint32_t area_max, uint32_t size_min) {
 	best_rect best = {
 		.area = 0,
-		.delta_x = 0
+		.delta_x = INT32_MAX,
+		.delta_y = INT32_MAX
 	};
 
 	// Find best rectangle
@@ -127,49 +127,51 @@ std::optional<uint32_t> vision_algo_target(const cv::Mat &final, uint32_t area_m
 
 		// Check if better than best
 		uint32_t center_x = box.x + box.width / 2;
-		uint32_t delta_x = CAM_WIDTH / 2 - center_x;
-		if (area > best.area && delta_x > best.delta_x) {
+		int32_t delta_x = (int32_t)center_x - CAM_WIDTH / 2;
+		if (area > best.area && abs(delta_x) < abs(best.delta_x)) {
 			best = {
 				.area = (uint32_t)area,
-				.delta_x = delta_x
+				.delta_x = delta_x,
+				.delta_y = box.y + box.height / 2 - CAM_HEIGHT / 2
 			};
 		}
 	}
 
-	return best.area > 0 ? std::make_optional(best.delta_x) : std::nullopt;
+	return best.area > 0 ? std::make_optional(std::make_pair(best.delta_x, best.delta_y)) : std::nullopt;
 }
 
 void sweep(const cv::Mat &frame, std::ofstream &outfile) {
 	for (uint32_t white = 5; white < 25; white++) {
 		for (uint32_t black = 5; black < 25; black++) {
-			const cv::Mat else_mask = vision_algo_not_mask(frame, white * 10, black * 10);
-			std::cout << "Mask #" << (white - 5) * 25 + black - 4 << "/400" << std::endl;
+			std::cout << "Mask #" << (white - 5) * 25 + black - 4 << "/400";
+			std::cout.flush();
+			const auto else_mask = vision_algo_not_mask(frame, white * 10, black * 10);
 
 			for (uint32_t kernel = 1; kernel < 7; kernel++) {
 				for (uint32_t iter = 1; iter < 7; iter++) {
-					const cv::Mat filtered = vision_algo_filter(else_mask, kernel * 3, iter * 3);
-					std::cout << "Filter #" << (kernel - 1) * 6 + iter << "/36" << std::endl;
+					const auto contours = vision_algo_filter(else_mask, kernel * 3, iter * 3);
 
-					for (uint32_t max_area = 1; max_area < 10; max_area++) {
+					for (uint32_t max_area = 1; max_area < 20; max_area++) {
 						for (uint32_t min_size = 0; min_size < CAM_WIDTH / 10 / 2; min_size++) {
-							auto result = vision_algo_target(filtered, max_area * 20000, min_size * 10);
+							auto result = vision_algo_target(contours, max_area * 10000, min_size * 10);
 
-							outfile << white * 10 << ","
-								<< black * 10 << ","
-								<< kernel * 3 << ","
-								<< iter * 3 << ","
-								<< max_area * 20000 << ","
-								<< min_size * 10 << ",";
-
-							result.has_value()
-								? outfile << result.value()
-								: outfile << "FAILED";
-							
-							outfile << "\n";
+							// Record meaningful result
+							if (result.has_value()) {
+								outfile << white * 10 << ","
+									<< black * 10 << ","
+									<< kernel * 3 << ","
+									<< iter * 3 << ","
+									<< max_area * 20000 << ","
+									<< min_size * 10 << ","
+									<< result.value().first << ","
+									<< result.value().second << std::endl;
+							}
 						}
 					}
 				}
 			}
+
+			printf("\33[2K\r");
 		}
 	}
 }
