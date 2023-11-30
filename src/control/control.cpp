@@ -12,9 +12,10 @@
 #include "robotmap.hpp"
 #include "vision.hpp"
 
-#define US_THRESHOLD 10000
+#define US_THRESHOLD 4500
 
 std::atomic_bool active = false;
+std::atomic_int edge_timer = 0;
 
 void control::activate() {
 	gpiod::chip chip("gpiochip0");
@@ -25,7 +26,6 @@ void control::activate() {
 	motor motor3(chip, pin::m3in1, pin::m3in2, pin::m3pwm);
 	motor motor4(chip, pin::m4in1, pin::m4in2, pin::m4pwm);
 	motor1.invert();
-	motor4.invert();
 
 	// Initialize infrareds
 	light_sens left_ir(chip, pin::ir1);
@@ -38,44 +38,83 @@ void control::activate() {
 	vision camera;
 
 	uint32_t conf_level = 0;
+	uint32_t edge_side = 0;
 	std::thread input_thread([](){
-		if (active) {
-			char ch;
-			std::cout << "Robot is active. Input 's' to stop" << std::endl;
-			std::cin >> ch;
+		while (true) {
+			if (active) {
+				char ch;
+				std::cout << "Robot is active. Input 's' to stop" << std::endl;
+				std::cin >> ch;
 
-			if (ch == 's') {
-				active = false;
+				if (ch == 's') {
+					active = false;
+				}
+			} else {
+				char ch;
+				std::cout << "Robot in inactive. Input 'r' to run" << std::endl;
+				std::cin >> ch;
+
+				if (ch == 'r') {
+					active = true;
+				}
 			}
-		} else {
-			char ch;
-			std::cout << "Robot in inactive. Input 'r' to run" << std::endl;
-			std::cin >> ch;
+		}
+	});
 
-			if (ch == 'r') {
-				active = true;
+	std::thread edge_thread([](){
+		while (true) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			if (edge_timer > 0) {
+				edge_timer--;
 			}
 		}
 	});
 
 	while (true) {
-		std::this_thread::sleep_for(std::chrono::microseconds(20));
+		std::this_thread::sleep_for(std::chrono::milliseconds(40));
 
 		if (!active) {
+			motor1.stop();
+			motor2.stop();
+			motor3.stop();
+			motor4.stop();
+			edge_timer = 0;
+			edge_side = 0;
+			conf_level = 0;
 			continue;
 		}
 
-		if (left_ir.read() || right_ir.read()) {
+		uint64_t pulse = us.pulse(0);
+		std::cout << pulse << std::endl;
+
+		if (left_ir.read() && pulse > 200) {
+			edge_timer = 10;
+			edge_side = 2;
 			std::cout << "EDGE!!" << std::endl;
-			motor1.set(100, BACKWARD);
-			motor2.set(100, BACKWARD);
-			motor3.set(100, BACKWARD);
-			motor4.set(100, BACKWARD);
+		}
+		if (right_ir.read() && pulse > 200) {
+			edge_timer = 10;
+			edge_side = 1;
+			std::cout << "EDGE!!" << std::endl;
+		}
+
+		if (edge_timer > 0) {
+			if (edge_side == 1) {
+				motor1.set(0, FORWARD);
+				motor2.set(100, FORWARD);
+				motor3.set(100, FORWARD);
+				motor4.set(0, FORWARD);
+			} else {
+				motor1.set(100, FORWARD);
+				motor2.set(0, FORWARD);
+				motor3.set(0, FORWARD);
+				motor4.set(100, FORWARD);
+			}
 			continue;
 		}
 
 		if (conf_level > 0) {
-			if (us.pulse(0) > US_THRESHOLD) {
+			if (pulse > US_THRESHOLD) {
 				std::cout << "Losing confidence" << std::endl;
 				conf_level--;
 			} else {
@@ -85,7 +124,7 @@ void control::activate() {
 		}
 
 		// Enemy found
-		if (us.pulse(0) < US_THRESHOLD) {
+		if (pulse < US_THRESHOLD) {
 			std::cout << "Enemy spotted" << std::endl;
 			conf_level = 3;
 		}
@@ -105,15 +144,15 @@ void control::activate() {
 		if (delta < 0) {
 			std::cout << "Enemy detected left side" << std::endl;
 			motor1.set(100, FORWARD);
-			motor2.set(100, FORWARD);
-			motor3.set(100, BACKWARD);
-			motor4.set(100, BACKWARD);
+			motor2.set(0, FORWARD);
+			motor3.set(0, FORWARD);
+			motor4.set(1000, FORWARD);
 		} else {
 			std::cout << "Enemy detected right side" << std::endl;
-			motor1.set(100, BACKWARD);
-			motor2.set(100, BACKWARD);
+			motor1.set(0, FORWARD);
+			motor2.set(100, FORWARD);
 			motor3.set(100, FORWARD);
-			motor4.set(100, FORWARD);
+			motor4.set(0, FORWARD);
 		}
 	}
 }

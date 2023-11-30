@@ -11,6 +11,6 @@ void test::show_masks() {
 
 	while (true) {
 		v.process();
-		v.make_guess();
+		std::cout << v.make_guess() << std::endl;
 	}
 }

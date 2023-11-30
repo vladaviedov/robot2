@@ -11,6 +11,7 @@
 #include "../driver/pwm.hpp"
 #include "../driver/motors.hpp"
 #include "../driver/hcsr04.hpp"
+#include "../control/robotmap.hpp"
 
 #define GPIO_USER "robot2_test"
 
@@ -184,10 +185,10 @@ void test::event() {
 }
 
 void test::distance() {
-	hc_sr04 sensor(*chip, RASPI_37, RASPI_38);
+	hc_sr04 sensor(*chip, pin::us_trig, pin::us_echo);
 
 	while (true) {
-		uint64_t value = sensor.pulse(100000);
+		uint64_t value = sensor.pulse(0);
 		std::cout << value << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}

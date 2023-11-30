@@ -32,7 +32,6 @@ hc_sr04::~hc_sr04() {
 	echo.release();
 }
 
-#include <iostream>
 uint64_t hc_sr04::pulse(uint64_t timeout_ns) {
 	std::lock_guard<std::mutex> guard(busy);
 
@@ -40,8 +39,8 @@ uint64_t hc_sr04::pulse(uint64_t timeout_ns) {
 	trig.set_value(1);
 	std::this_thread::sleep_for(std::chrono::microseconds(10));
 	trig.set_value(0);
-
-	// Wait for pulse
+	
+	// Wait for pulse start
 	while (!echo.get_value()) {
 		std::this_thread::sleep_for(std::chrono::microseconds(10));
 	}
