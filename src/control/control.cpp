@@ -66,6 +66,7 @@ void control::activate() {
 		}
 
 		if (left_ir.read() || right_ir.read()) {
+			std::cout << "EDGE!!" << std::endl;
 			motor1.set(100, BACKWARD);
 			motor2.set(100, BACKWARD);
 			motor3.set(100, BACKWARD);
@@ -75,14 +76,17 @@ void control::activate() {
 
 		if (conf_level > 0) {
 			if (us.pulse(0) > US_THRESHOLD) {
+				std::cout << "Losing confidence" << std::endl;
 				conf_level--;
 			} else {
+				std::cout << "Enemy spotted" << std::endl;
 				conf_level = 3;
 			}
 		}
 
 		// Enemy found
 		if (us.pulse(0) < US_THRESHOLD) {
+			std::cout << "Enemy spotted" << std::endl;
 			conf_level = 3;
 		}
 
@@ -99,12 +103,17 @@ void control::activate() {
 		int64_t delta = camera.make_guess();
 
 		if (delta < 0) {
+			std::cout << "Enemy detected left side" << std::endl;
 			motor1.set(100, FORWARD);
 			motor2.set(100, FORWARD);
+			motor3.set(100, BACKWARD);
+			motor4.set(100, BACKWARD);
+		} else {
+			std::cout << "Enemy detected right side" << std::endl;
+			motor1.set(100, BACKWARD);
+			motor2.set(100, BACKWARD);
 			motor3.set(100, FORWARD);
 			motor4.set(100, FORWARD);
-		} else {
-			// TODO: drive right
 		}
 	}
 }
