@@ -83,16 +83,11 @@ void vision::process() {
 	cv::waitKey(50);
 }
 
-guess_dir vision::make_guess() const {
+int32_t vision::make_guess() const {
 	uint64_t center_x = best_rect.x + best_rect.width / 2;
+	int64_t delta_x = center_x - CAMERA_WIDTH / 2;
 
-	if (center_x < CAMERA_WIDTH / 3) {
-		return guess_dir::LEFT;
-	} else if (center_x < CAMERA_WIDTH * 2 / 3) {
-		return guess_dir::STRAIGHT;
-	} else {
-		return guess_dir::RIGHT;
-	}
+	return delta_x;
 }
 
 cv::Mat vision::gen_mask(cv::Mat &frame, cv::Scalar &lower, cv::Scalar &upper) const {

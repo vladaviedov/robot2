@@ -19,9 +19,14 @@ public:
 	void stop();
 	void set(uint32_t speed, direction dir);
 
+	inline void invert() {
+		inverted = !inverted;
+	}
+
 private:
 	const gpiod::line ain1;
 	const gpiod::line ain2;
 	pwm_worker pwm;
+	bool inverted;
 
 };

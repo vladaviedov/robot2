@@ -38,6 +38,10 @@ void motor::stop() {
 }
 
 void motor::set(uint32_t speed, direction dir) {
+	if (inverted) {
+		dir = direction::FORWARD ? direction::BACKWARD : direction::FORWARD;
+	}
+
 	if (dir == direction::FORWARD) {
 		ain1.set_value(1);
 		ain2.set_value(0);
