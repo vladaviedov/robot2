@@ -84,7 +84,7 @@ void control::activate() {
 			continue;
 		}
 
-		uint64_t pulse = us.pulse(0);
+		uint64_t pulse = us.pulse();
 		std::cout << pulse << std::endl;
 
 		if (left_ir.read() && pulse > 200) {
@@ -138,7 +138,7 @@ void control::activate() {
 			continue;
 		}
 
-		camera.process();
+		camera.process(false);
 		int64_t delta = camera.make_guess();
 
 		if (delta < 0) {

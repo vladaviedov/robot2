@@ -1,5 +1,12 @@
+/**
+ * @file tests/camera.hpp
+ * @brief Functions for testing camera.
+ */
 #pragma once
 
 namespace test {
-	void show_masks();
+	/**
+	 * @brief Show vision code output.
+	 */
+	void show_camera();
 }

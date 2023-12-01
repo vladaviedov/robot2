@@ -1,3 +1,7 @@
+/**
+ * @file tests/camera.hpp
+ * @brief Functions for testing camera.
+ */
 #include "camera.hpp"
 
 #include <iostream>
@@ -6,11 +10,14 @@
 
 #include "../control/vision.hpp"
 
-void test::show_masks() {
+void test::show_camera() {
 	vision v;
 
 	while (true) {
-		v.process();
+		// Show boxes
+		v.process(true);
+
+		// Print out delta x of guess
 		std::cout << v.make_guess() << std::endl;
 	}
 }

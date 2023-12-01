@@ -1,11 +1,14 @@
+/**
+ * @file tests/driver.cpp
+ * @brief Functions for testing hardware and driver code.
+ */
 #include "driver.hpp"
 
-#include <chrono>
-#include <iostream>
 #include <cmath>
-#include <gpiod.hpp>
-#include <signal.h>
+#include <iostream>
 #include <thread>
+#include <chrono>
+#include <gpiod.hpp>
 
 #include "../driver/pinmap.hpp"
 #include "../driver/pwm.hpp"
@@ -15,6 +18,7 @@
 
 #define GPIO_USER "robot2_test"
 
+// GPIO Chip object for libgpiod
 std::unique_ptr<gpiod::chip> chip;
 
 void test::driver_prepare() {
@@ -22,6 +26,7 @@ void test::driver_prepare() {
 }
 
 void test::gpio_out() {
+	// Setup test 37 line
 	gpiod::line test_line = chip->get_line(RASPI_37);
 	test_line.request({
 		.consumer = GPIO_USER,
@@ -29,6 +34,7 @@ void test::gpio_out() {
 		.flags = 0
 	}, 0);
 
+	// Control from console
 	while (true) {
 		int input;
 		std::cout << "Input value: ";
@@ -44,6 +50,7 @@ void test::gpio_out() {
 }
 
 void test::gpio_in() {
+	// Setup test 37 line
 	gpiod::line test_line = chip->get_line(RASPI_37);
 	test_line.request({
 		.consumer = GPIO_USER,
@@ -51,6 +58,7 @@ void test::gpio_in() {
 		.flags = 0
 	});
 
+	// Control from console
 	while (true) {
 		int value = test_line.get_value();
 		std::cout << value << std::endl;
@@ -59,8 +67,10 @@ void test::gpio_in() {
 }
 
 void test::pwm() {
+	// Setup test 37 line
 	pwm_worker test_pwm(*chip, RASPI_37);	
 
+	// Control from console
 	while (true) {
 		int input;
 		std::cout << "Input duty: ";
@@ -73,8 +83,9 @@ void test::pwm() {
 }
 
 void test::one_motor() {
-	motor motor(*chip, RASPI_11, RASPI_12, RASPI_10);
+	motor motor(*chip, pin::m1in1, pin::m1in2, pin::m1pwm);
 
+	// Control from console
 	while (true) {
 		int input;
 		std::cout << "Input speed: ";
@@ -91,9 +102,10 @@ void test::one_motor() {
 }
 
 void test::two_motor() {
-	motor motor1(*chip, RASPI_11, RASPI_12, RASPI_10);
-	motor motor2(*chip, RASPI_13, RASPI_15, RASPI_19);
+	motor motor1(*chip, pin::m1in1, pin::m1in2, pin::m1pwm);
+	motor motor2(*chip, pin::m2in1, pin::m2in2, pin::m2pwm);
 
+	// Control from console
 	while (true) {
 		int input1, input2;
 		std::cout << "Input speed 1: ";
@@ -120,11 +132,12 @@ void test::two_motor() {
 }
 
 void test::four_motor() {
-	motor motor1(*chip, RASPI_11, RASPI_12, RASPI_10);
-	motor motor2(*chip, RASPI_13, RASPI_15, RASPI_19);
-	motor motor3(*chip, RASPI_29, RASPI_23, RASPI_21);
-	motor motor4(*chip, RASPI_31, RASPI_33, RASPI_35);
+	motor motor1(*chip, pin::m1in1, pin::m1in2, pin::m1pwm);
+	motor motor2(*chip, pin::m2in1, pin::m2in2, pin::m2pwm);
+	motor motor3(*chip, pin::m3in1, pin::m3in2, pin::m3pwm);
+	motor motor4(*chip, pin::m4in1, pin::m4in2, pin::m4pwm);
 
+	// Control from console
 	while (true) {
 		int input1, input2, input3, input4;
 		std::cout << "Input speed 1: ";
@@ -170,25 +183,12 @@ void test::four_motor() {
 	}
 }
 
-void test::event() {
-	gpiod::line test_line = chip->get_line(RASPI_37);
-	test_line.request({
-		.consumer = GPIO_USER,
-		.request_type = gpiod::line_request::EVENT_FALLING_EDGE,
-		.flags = 0
-	});
-
-	while (true) {
-		int res = test_line.event_wait(std::chrono::milliseconds(100));
-		std::cout << "DONENE " << res << std::endl;
-	}
-}
-
 void test::distance() {
 	hc_sr04 sensor(*chip, pin::us_trig, pin::us_echo);
 
+	// Write readings to console
 	while (true) {
-		uint64_t value = sensor.pulse(0);
+		uint64_t value = sensor.pulse();
 		std::cout << value << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}

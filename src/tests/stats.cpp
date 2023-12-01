@@ -1,13 +1,18 @@
+/**
+ * @file tests/stats.cpp
+ * @brief Functions for collecting & analyzing pictures.
+ */
 #include "stats.hpp"
 
+#include <cstdio>
+#include <cmath>
 #include <string>
 #include <vector>
 #include <fstream>
 #include <optional>
-#include <cstdio>
-#include <cmath>
 #include <opencv2/opencv.hpp>
 
+// Camera dimensions
 #define CAM_WIDTH 1280
 #define CAM_HEIGHT 720
 
@@ -34,13 +39,16 @@ void test::var_sweep(std::string &filename, std::string &outfile) {
 	cv::Mat hls_frame;
 	cv::cvtColor(frame, hls_frame, cv::COLOR_BGR2HLS);
 
+	// Run sweep
 	sweep(hls_frame, file);
 }
 
 void test::save_image() {
+	// Open camera
 	cv::VideoCapture camera(0);
 	cv::Mat frame;
 	
+	// Save images with incrementing index filename
 	uint32_t i = 0;
 	while (true) {
 		camera.read(frame);
@@ -57,6 +65,14 @@ void test::save_image() {
 	camera.release();
 }
 
+/**
+ * @brief Vision algorithm for generating the not black or white mask.
+ *
+ * @param[in] frame - Input frame.
+ * @param[in] white_sens - White sensitivity.
+ * @param[in] black_sens - Black sensitivity.
+ * @return Mask frame.
+ */
 cv::Mat vision_algo_not_mask(const cv::Mat &frame, uint32_t white_sens, uint32_t black_sens) {
 	// Generate bounds
 	cv::Scalar white_lower(0, 255 - white_sens, 0);
@@ -83,6 +99,14 @@ cv::Mat vision_algo_not_mask(const cv::Mat &frame, uint32_t white_sens, uint32_t
 	return else_mask;
 }
 
+/**
+ * @brief Vision algorithm for filtering and generating contours.
+ *
+ * @param[in] input - Input mask.
+ * @param[in] kernel_size - Morphology kernel size.
+ * @param[in] iterations - Morphology iterations.
+ * @return Contour array.
+ */
 std::vector<std::vector<cv::Point>> vision_algo_filter(const cv::Mat &input, uint32_t kernel_size, uint32_t iterations) {
 	// Make kernel
 	auto kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(kernel_size, kernel_size));
@@ -103,6 +127,14 @@ std::vector<std::vector<cv::Point>> vision_algo_filter(const cv::Mat &input, uin
 	return contours;
 }
 
+/**
+ * @brief Vision algorithm to generate target coordinates.
+ *
+ * @param[in] contours - Contour array.
+ * @param[in] area_max - Maximum contour box area.
+ * @param[in] size_min - Minimum contour box size length.
+ * @return (x, y) pair if something detected; nothing if no detection.
+ */
 std::optional<std::pair<int32_t, int32_t>> vision_algo_target(const std::vector<std::vector<cv::Point>> &contours, uint32_t area_max, uint32_t size_min) {
 	best_rect best = {
 		.area = 0,
@@ -140,17 +172,29 @@ std::optional<std::pair<int32_t, int32_t>> vision_algo_target(const std::vector<
 	return best.area > 0 ? std::make_optional(std::make_pair(best.delta_x, best.delta_y)) : std::nullopt;
 }
 
+/**
+ * @brief Sweep helper function.
+ *
+ * @param[in] frame - Input frame.
+ * @param[in] outfile - Output stream.
+ */
 void sweep(const cv::Mat &frame, std::ofstream &outfile) {
+	// Write CSV header
+	outfile << "white,black,kernel,iter,max_area,min_size,delta_x,delta_y" << std::endl;
+
+	// Color sensitivies
 	for (uint32_t white = 5; white < 25; white++) {
 		for (uint32_t black = 5; black < 25; black++) {
 			std::cout << "Mask #" << (white - 5) * 25 + black - 4 << "/400";
 			std::cout.flush();
 			const auto else_mask = vision_algo_not_mask(frame, white * 10, black * 10);
 
+			// Morphology settings
 			for (uint32_t kernel = 1; kernel < 7; kernel++) {
 				for (uint32_t iter = 1; iter < 7; iter++) {
 					const auto contours = vision_algo_filter(else_mask, kernel * 3, iter * 3);
 
+					// Contour filtering
 					for (uint32_t max_area = 1; max_area < 20; max_area++) {
 						for (uint32_t min_size = 0; min_size < CAM_WIDTH / 10 / 2; min_size++) {
 							auto result = vision_algo_target(contours, max_area * 10000, min_size * 10);
@@ -171,6 +215,7 @@ void sweep(const cv::Mat &frame, std::ofstream &outfile) {
 				}
 			}
 
+			// Erase last console printout
 			printf("\33[2K\r");
 		}
 	}

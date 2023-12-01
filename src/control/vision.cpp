@@ -22,7 +22,7 @@ vision::~vision() {
 	camera.release();
 }
 
-void vision::process() {
+void vision::process(bool show_output) {
 	// Get camera frame
 	cv::Mat frame;
 	camera.read(frame);
@@ -42,10 +42,6 @@ void vision::process() {
 	cv::bitwise_not(white_mask, not_white_mask);
 	cv::bitwise_not(black_mask, not_black_mask);
 	cv::bitwise_and(not_white_mask, not_black_mask, else_mask);
-
-	// Display masks
-	/* cv::imshow("White mask", white_mask); */
-	/* cv::imshow("Else mask", else_mask); */
 
 	// Get contours
 	std::vector<std::vector<cv::Point>> contours;
@@ -77,7 +73,10 @@ void vision::process() {
 		cv::rectangle(frame, cv::Point(rect.x, rect.y), cv::Point(rect.x + rect.width, rect.y + rect.height),
 			cv::Scalar(0, 0, 255), 2);
 	}
-	/* cv::imshow("Boxes", frame); */
+
+	if (show_output) {
+		cv::imshow("Boxes", frame);
+	}
 
 	// Delay
 	cv::waitKey(50);

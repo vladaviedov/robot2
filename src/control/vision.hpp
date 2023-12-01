@@ -8,7 +8,7 @@ public:
 	vision();
 	~vision();
 
-	void process();
+	void process(bool show_output);
 	int32_t make_guess() const;
 
 private:
