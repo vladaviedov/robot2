@@ -1,21 +1,32 @@
+"""
+@file main.jl
+@brief Manipulate data to produce a ranking for CV 'models'
+@note To run, include this file from the julia REPL
+"""
+
 using DataFrames
 using CSV
 using Statistics
 
+# Camera center position
 const cam_center_x = 1280 / 2
 const cam_center_y = 720 / 2
 
+# Convert absolute position to relative to center
 function target_to_delta(target)
 	return (target[1] - cam_center_x, target[2] - cam_center_y)
 end
 
+# Calculate error rating from camera guess
 function error_rating(target_delta, computed_delta)
 	# x-component more important
 	local x_diff = target_delta[1] - computed_delta[1]
 	local x_rating = 0
+	
 	if x_diff < 200
 		x_rating = x_diff ^ 2
 	else
+		# Make it harder for large misses to count
 		x_rating = 200 ^ 2 + (x_diff - 200) ^ 3
 	end
 
@@ -25,16 +36,15 @@ function error_rating(target_delta, computed_delta)
 	if y_diff < 200
 		y_rating = y_diff ^ 2 / 3
 	else
+		# Make it harder for large misses to count
 		y_rating = (200 ^ 2 + (y_diff - 200) ^ 3) / 3
 	end
 
 	return x_rating + y_rating
 end
 
-function error_cutoff(rating)
-	return rating < 10000
-end
-
+# Manually selected targets for each picture
+# index = picture number; image1 does not exist
 targets = [
 	(0, 0)
 	(724, 216)
@@ -58,28 +68,42 @@ targets = [
 	(820, 87)
 ]
 
+# Process each frame's data file
 frames = []
 for i in 2:20
 	println("Processing image ", i)
 
+	# Generate target delta
 	local target_delta = target_to_delta(targets[i])
 	println(target_delta)
 
+	# Load from file
 	local data = DataFrame(CSV.File(string("../data/image", i, ".csv")))
+
+	# Calculate error rating
 	data[!, "error_rating"] = map((x, y) -> error_rating(target_delta, (x, y)), data.delta_x, data.delta_y)
 
+	# Add to array
 	push!(frames, data)
 end
 
+# Combine all data into one dataframe
 combined = frames[1]
 for i in 2:19
 	global combined = vcat(combined, frames[i])
 end
 
+# Group output by input parameters
 grouped = groupby(combined, [:white, :black, :kernel, :iter, :max_area, :min_size])
+# Filter any model that failed to detect anything at least once
 filtered = filter(:white => w -> length(w) == 19, grouped)
+# Combine groups to generate an average error rating
 recombined = combine(filtered, :error_rating => mean)
+# Sort by ascending error rating average
 sort!(recombined, :error_rating_mean)
+
+# Select first 100/1000 elements
+smallest1000 = first(recombined, 1000)
 smallest100 = first(recombined, 100)
 
-# For here do whatver
+# Give control back to shell
