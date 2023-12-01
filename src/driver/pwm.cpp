@@ -1,12 +1,17 @@
+/**
+ * @file driver/pwm.cpp
+ * @brief Software PWM implementation.
+ */
 #include "pwm.hpp"
 
-#include <chrono>
 #include <memory>
+#include <chrono>
 #include <thread>
 
 // 500 Hz PWM -> 2000us / period
 #define TOTAL_TIME 2000
 #define TIME_PER_PERCENT (TOTAL_TIME / 100)
+
 #define GPIO_USER "robot2_pwm"
 
 pwm_worker::pwm_worker(gpiod::chip &chip, uint32_t pin) :
@@ -18,14 +23,17 @@ pwm_worker::pwm_worker(gpiod::chip &chip, uint32_t pin) :
 		.flags = 0
 	}, 0);
 
-	// Create worker thread
+	// Thread function
 	auto executor = [&](){
 		while (active) {
+			// sleep_for(0) would still create a small HIGH spike
 			if (duty_percent != 0) {
 				line.set_value(1);
 				std::this_thread::sleep_for(
 					std::chrono::microseconds(duty_percent * TIME_PER_PERCENT));
 			}
+
+			// Same here
 			if (duty_percent != 100) {
 				line.set_value(0);
 				std::this_thread::sleep_for(
@@ -33,13 +41,14 @@ pwm_worker::pwm_worker(gpiod::chip &chip, uint32_t pin) :
 			}
 		}
 	};
+
+	// Create worker thread
 	pwm_thread = std::make_unique<std::thread>(executor);
 }
 
 pwm_worker::~pwm_worker() {
-	// Destroy thread
+	// Deactivate thread & wait for join
 	active = false;
-	std::this_thread::sleep_for(std::chrono::microseconds(TOTAL_TIME));
 	pwm_thread->join();
 
 	// Reset gpio line

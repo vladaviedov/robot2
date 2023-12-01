@@ -1,3 +1,7 @@
+/**
+ * @file driver/motor.hpp
+ * @brief Motor driver header for the provided motor controller.
+ */
 #pragma once
 
 #include <cstdint>
@@ -13,12 +17,35 @@ enum direction {
 class motor {
 
 public:
+	/**
+	 * @brief Constructor.
+	 *
+	 * @param[in] chip - libgpiod GPIO chip object.
+	 * @param[in] in1_pin - MxIN1 libgpiod pin number.
+	 * @param[in] in2_pin - MxIN2 libgpiod pin number.
+	 * @param[in] pwm_pin - MxPWM libgpiod pin number.
+	 */
 	motor(gpiod::chip &chip, uint32_t in1_pin, uint32_t in2_pin, uint32_t pwm_pin);
+
 	~motor();
 
+	/**
+	 * @brief Stop the motor.
+	 */
 	void stop();
+
+	/**
+	 * @brief Set motor to desired speed.
+	 *
+	 * @param[in] speed - Motor speed (1-100).
+	 * @param[in] dir - Motor direction.
+	 */
 	void set(uint32_t speed, direction dir);
 
+	/**
+	 * @brief Invert motor direction when using 'set'.
+	 *
+	 */
 	inline void invert() {
 		inverted = !inverted;
 	}

@@ -1,3 +1,7 @@
+/**
+ * @file driver/lightsens.cpp
+ * @brief Infrared sensor driver implementation.
+ */
 #include "lightsens.hpp"
 
 #include <cstdint>
@@ -19,6 +23,7 @@ light_sens::~light_sens() {
 	input.release();
 }
 
-int light_sens::read() const {
+bool light_sens::read() const {
+	// Sensor goes LOW when edge is detected
 	return !input.get_value();
 }

@@ -1,7 +1,12 @@
+/**
+ * @file driver/pinmap.hpp
+ * @brief This file provides macro mappings from physical pin numbers on the
+ * Raspberry Pi to numbers recognized by libgpiod.
+ */
 #pragma once
 
 // Source: https://i.stack.imgur.com/p2nBh.png
-// Physical Pin Number -> libgpiod Line Number
+// Physical Pin Number -> libgpiod Pin Number
 #define RASPI_3 2u
 #define RASPI_5 3u
 #define RASPI_7 4u

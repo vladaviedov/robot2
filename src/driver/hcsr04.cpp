@@ -1,10 +1,14 @@
+/**
+ * @file driver/hcsr04.cpp
+ * @brief Driver implementation for HC-SR04.
+ */
 #include "hcsr04.hpp"
 
-#include <chrono>
-#include <mutex>
+#include <cstdint>
 #include <stdexcept>
 #include <thread>
-#include <cstdint>
+#include <chrono>
+#include <mutex>
 #include <gpiod.hpp>
 
 #define GPIO_USER "robot2_sensor"
@@ -19,7 +23,7 @@ hc_sr04::hc_sr04(gpiod::chip &chip, uint32_t trig_pin, uint32_t echo_pin) :
 		.flags = 0
 	}, 0);
 	
-	// Set echo pin to rising edge input
+	// Set echo pin to input
 	echo.request({
 		.consumer = GPIO_USER,
 		.request_type = gpiod::line_request::DIRECTION_INPUT,
@@ -32,10 +36,8 @@ hc_sr04::~hc_sr04() {
 	echo.release();
 }
 
-uint64_t hc_sr04::pulse(uint64_t timeout_ns) {
-	std::lock_guard<std::mutex> guard(busy);
-
-	// Send pulse
+uint64_t hc_sr04::pulse() const {
+	// Send trig pulse
 	trig.set_value(1);
 	std::this_thread::sleep_for(std::chrono::microseconds(10));
 	trig.set_value(0);
@@ -58,14 +60,4 @@ uint64_t hc_sr04::pulse(uint64_t timeout_ns) {
 
 	// Compute & return delta
 	return std::chrono::duration_cast<std::chrono::microseconds>(final - initial).count();
-}
-
-void hc_sr04::pulse_async(uint64_t timeout_ns, std::function<void(uint64_t)> &callback) {
-	auto executor = [&](uint64_t timeout_ns, std::function<void(uint64_t)> callback) {
-		auto result = pulse(timeout_ns);
-		callback(result);
-	};
-
-	std::thread async(executor, timeout_ns, callback);
-	async.detach();
 }
