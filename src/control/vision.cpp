@@ -1,15 +1,25 @@
+/**
+ * @file control/vision.cpp
+ * @brief Computer vision code.
+ */
 #include "vision.hpp"
 
 #include <vector>
 #include <opencv2/opencv.hpp>
 
-#include "filter.hpp"
-
+// CV parameters
 #define WHITE_SENS 80
 #define BLACK_SENS 170
+#define KERNEL_SIZE 3
+#define ITER 3
+#define MAX_AREA 20000
+#define MIN_SIZE 10
+
+// Camera dimensions
 #define CAMERA_WIDTH 1280
 #define CAMERA_HEIGHT 720
 
+// White & black HLS bounds
 static cv::Scalar white_lower(0, 255 - WHITE_SENS, 0);
 static cv::Scalar white_upper(255, 255, WHITE_SENS);
 static cv::Scalar black_lower(0, 0, 0);
@@ -95,8 +105,16 @@ cv::Mat vision::gen_mask(cv::Mat &frame, cv::Scalar &lower, cv::Scalar &upper) c
 	// Cutoff
 	cv::inRange(frame, lower, upper, mask);
 
-	// TODO: Apply filters
-	mask = filter::morph(mask);
-	
-	return mask;
+	// Filter
+	auto kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(KERNEL_SIZE, KERNEL_SIZE));
+
+	// Erosion
+	cv::Mat eroded;
+	cv::morphologyEx(mask, eroded, cv::MORPH_ERODE, kernel, cv::Point(-1, -1), ITER);
+
+	// Dilate remainder
+	cv::Mat dilated;
+	cv::morphologyEx(eroded, dilated, cv::MORPH_DILATE, kernel, cv::Point(-1, -1), ITER);
+
+	return dilated;
 }

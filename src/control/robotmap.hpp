@@ -1,3 +1,7 @@
+/**
+ * @file control/robotmap.hpp
+ * @brief Creates libgpiod mappings for symbolic pin names.
+ */
 #pragma once
 
 #include <cstdint>
