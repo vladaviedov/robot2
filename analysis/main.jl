@@ -106,4 +106,26 @@ sort!(recombined, :error_rating_mean)
 smallest1000 = first(recombined, 1000)
 smallest100 = first(recombined, 100)
 
-# Give control back to shell
+# Columns to friendly name
+column_map = Dict(
+	:white => "White sensitivity",
+	:black => "Black sensitivity",
+	:kernel => "Kernel size",
+	:iter => "Iterations",
+	:max_area => "Maximum bounding box area",
+	:min_size => "Minimum bounding box side length"
+)
+
+# Make plots
+include("makeplots.jl")
+for col in [:white, :black, :kernel, :iter, :max_area, :min_size]
+	local averaged_total = collapse_data(recombined, col)
+	local averaged_1000 = collapse_data(smallest1000, col)
+	local averaged_100 = collapse_data(smallest100, col)
+
+	local plots = make_plots(averaged_total, averaged_1000, averaged_100, column_map[col])
+
+	savefig(plots[1], string(col, "_total.svg"))
+	savefig(plots[2], string(col, "_top1000.svg"))
+	savefig(plots[3], string(col, "_top100.svg"))
+end
